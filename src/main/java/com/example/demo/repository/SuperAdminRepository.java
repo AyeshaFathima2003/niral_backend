@@ -1,12 +1,12 @@
 package com.example.demo.repository;
 
-import com.example.demo.model.User;
+import com.example.demo.model.SuperAdmin;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends MongoRepository<User, String> {
-    Optional<User> findByPhone(String phoneNumber); // Fixed method name
+public interface SuperAdminRepository extends MongoRepository<SuperAdmin, String> {
+    Optional<SuperAdmin> findByUsername(String username);
 }

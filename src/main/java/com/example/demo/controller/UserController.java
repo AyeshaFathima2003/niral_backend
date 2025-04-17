@@ -1,40 +1,30 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.User;
+import com.example.demo.dto.RegisterRequest;
 import com.example.demo.service.UserService;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
+import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody User user) {
-        try {
-            User savedUser = userService.registerUser(user);
-            return ResponseEntity.ok("User registered successfully: " + savedUser.getUsername());
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+   
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
-        String email = loginRequest.get("email");
-        String password = loginRequest.get("password");
+@PostMapping("/register")
+public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest request) {
+    System.out.println("Received Request: " + request);
+    return userService.registerUser(request);
+}
 
-        if (userService.authenticateUser(email, password)) {
-            return ResponseEntity.ok("Login successful");
-        } else {
-            return ResponseEntity.status(401).body("Invalid email or password");
-        }
-    }
+
+    /*@GetMapping("/{userId}")
+    public ResponseEntity<?> getUserDetails(@PathVariable String userId) {
+        return userService.getUserDetails(userId);
+    }*/
 }
