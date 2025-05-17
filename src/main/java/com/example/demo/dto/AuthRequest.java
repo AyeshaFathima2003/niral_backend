@@ -1,15 +1,11 @@
 package com.example.demo.dto;
 
-
-
 import lombok.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class LoginRequest {
-    private String phoneNumber;   // Login with phone number
+public class AuthRequest {
+    private String email;
     private String password;
 }
-

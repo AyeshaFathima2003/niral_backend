@@ -1,24 +1,21 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.KitDTO;
+import com.example.demo.model.Kit;
 import com.example.demo.service.KitService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/kits")
-@RequiredArgsConstructor
+@RequestMapping("/api/kits")
 public class KitController {
 
-    private final KitService kitService;
+    @Autowired
+    private KitService kitService;
 
-    /*@GetMapping("/track/{kitId}")
-    public ResponseEntity<?> trackKit(@PathVariable String kitId) {
-        return kitService.trackKit(kitId);
-    } */
-
-    @GetMapping("/status/{userId}")
-    public ResponseEntity<?> getUserKitStatus(@PathVariable String userId) {
-        return kitService.getUserKitStatus(userId);
+    @PostMapping("/add")
+    public Kit addKit(@RequestBody KitDTO kitDTO) {
+        return kitService.addKit(kitDTO);
     }
 }

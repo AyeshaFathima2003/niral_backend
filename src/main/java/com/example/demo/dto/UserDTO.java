@@ -1,24 +1,17 @@
-package com.example.demo.model;
+package com.example.demo.dto;
 
 import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 
-@Document(collection = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
-
-    @Id
-    private String userId;
-
+public class UserDTO {
     private String name;
     private String mobileNumber;
-    private String emailId; // optional
+    private String emailId;
     private String aadharCard;
     private String address;
     private String district;
@@ -26,6 +19,4 @@ public class User {
     private LocalDate startDate;
     private LocalDate endDate;
     private String location;
-
-    private String registeredBy; // adminId
 }

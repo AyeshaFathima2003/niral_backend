@@ -1,38 +1,55 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.KitRequest;
-import com.example.demo.model.Kit;
-import com.example.demo.model.KitStatus;
-import com.example.demo.repository.KitRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import com.example.demo.dto.*;
+import com.example.demo.model.Admin;
+import com.example.demo.repository.AdminRepository;
+import com.example.demo.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class AdminService {
 
-    private final KitRepository kitRepository;
+    @Autowired
+    private AdminRepository adminRepository;
 
-    public ResponseEntity<?> registerKit(KitRequest request) {
-        Kit kit = Kit.builder()
-                .userId(request.getUserId())
-                .adminId(request.getAdminId())
-                .registrationDate(LocalDate.now())
-                .status(KitStatus.PENDING)
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    public String signup(AdminSignupDTO dto) {
+        Optional<Admin> existing = adminRepository.findByEmail(dto.getEmail());
+        if (existing.isPresent()) {
+            throw new RuntimeException("Admin already exists with this email");
+        }
+
+        Admin admin = Admin.builder()
+                .name(dto.getName())
+                .mobileNumber(dto.getMobileNumber())
+                .DOB(dto.getDOB())
+                .aadharCard(dto.getAadharCard())
+                .username(dto.getUsername())
+                .email(dto.getEmail())
+                .password(passwordEncoder.encode(dto.getPassword()))
                 .build();
 
-        kitRepository.save(kit);
-        return ResponseEntity.ok("Kit registered successfully!");
+        adminRepository.save(admin);
+        return jwtUtil.generateToken(admin.getEmail());
     }
 
-    public ResponseEntity<?> trackKit(String kitId) {
-        Optional<Kit> kit = kitRepository.findById(kitId);
-        return kit.map(ResponseEntity::ok)
-        .orElse(ResponseEntity.badRequest().build());
+    public String login(AuthRequest authRequest) {
+        Admin admin = adminRepository.findByEmail(authRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("Invalid email"));
 
+        if (!passwordEncoder.matches(authRequest.getPassword(), admin.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
+
+        return jwtUtil.generateToken(admin.getEmail());
     }
 }

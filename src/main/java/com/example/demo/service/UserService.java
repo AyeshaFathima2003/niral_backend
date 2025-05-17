@@ -1,53 +1,79 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.RegisterRequest;
+import com.example.demo.dto.UserDTO;
+import com.example.demo.model.Kit;
+import com.example.demo.model.KitAssignment;
+import com.example.demo.model.KitStatus;
 import com.example.demo.model.User;
-import com.example.demo.model.Role;
+import com.example.demo.repository.KitAssignmentRepository;
+import com.example.demo.repository.KitRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.KitRepository; // ✅ Import missing KitRepository
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.UUID;
+
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final KitRepository kitRepository; // ✅ Inject KitRepository
-    private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserRepository userRepository;
 
-    public ResponseEntity<String> registerUser(RegisterRequest request) {
-        if (userRepository.findByPhone(request.getPhoneNumber()).isPresent()) {
-            return ResponseEntity.badRequest().body("Phone number already registered.");
-        }
+    @Autowired
+    private KitAssignmentRepository kitAssignmentRepository;
 
-        // Use Builder pattern for better maintainability
+    @Autowired
+    private KitRepository kitRepository;  // Add this
+
+    public User addUser(UserDTO userDTO, String adminId) {
+        // Create and save user
         User user = User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .phone(request.getPhoneNumber())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .aadhaarNumber(request.getAadhaarNumber())
-                .email(request.getEmail())
-                .addressLine1(request.getAddressLine1())
-                .addressLine2(request.getAddressLine2())
-                .landmark(request.getLandmark())
-                .city(request.getCity())
-                .state(request.getState())
-                .pincode(request.getPincode())
-                .role(Role.USER)
+                .userId(UUID.randomUUID().toString())
+                .name(userDTO.getName())
+                .mobileNumber(userDTO.getMobileNumber())
+                .emailId(userDTO.getEmailId())
+                .aadharCard(userDTO.getAadharCard())
+                .address(userDTO.getAddress())
+                .district(userDTO.getDistrict())
+                .purpose(userDTO.getPurpose())
+                .startDate(userDTO.getStartDate())
+                .endDate(userDTO.getEndDate())
+                .location(userDTO.getLocation())
+                .registeredBy(adminId)
                 .build();
 
-        userRepository.save(user);
-        return ResponseEntity.ok("User registered successfully!");
-    }
+        User savedUser = userRepository.save(user);
 
-    // ✅ Ensure trackKit() has access to kitRepository
-    /*public ResponseEntity<?> trackKit(String kitId) {
-        return kitRepository.findById(kitId)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.badRequest().body("Kit not found!"));
-    }*/
+        // Determine kit name based on purpose
+        String selectedKitName = switch (userDTO.getPurpose().toLowerCase()) {
+            case "agriculture" -> "Agriculture Borewell Kit";
+            case "domestic" -> "Domestic Borewell Kit";
+            case "industry" -> "Industrial Borewell Kit";
+            default -> null;
+        };
+
+        String kitId = null;
+
+        if (selectedKitName != null) {
+            Kit kit = kitRepository.findByKitName(selectedKitName);
+            if (kit != null) {
+                kitId = kit.getKitId();
+            }
+        }
+
+        // Create kit assignment
+        KitAssignment assignment = KitAssignment.builder()
+                .userName(savedUser.getName()) 
+                .kitId(kitId) // now assigned based on purpose
+                .status(KitStatus.REQUESTED)
+                .requestDate(LocalDate.now())
+                .build();
+
+        kitAssignmentRepository.save(assignment);
+
+        return savedUser;
+    }
 }
+
+

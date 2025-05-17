@@ -1,30 +1,30 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.RegisterRequest;
+import com.example.demo.dto.UserDTO;
+import com.example.demo.model.User;
 import com.example.demo.service.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import com.example.demo.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/users")
-@RequiredArgsConstructor
+@RequestMapping("/api/users")
 public class UserController {
 
-    private final UserService userService;
+    @Autowired
+    private UserService userService;
 
-   
+    @Autowired
+    private JwtUtil jwtUtil;
 
-@PostMapping("/register")
-public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest request) {
-    System.out.println("Received Request: " + request);
-    return userService.registerUser(request);
-}
+    @PostMapping("/add")
+    public User addUser(@RequestHeader("Authorization") String token,
+                        @RequestBody UserDTO userDTO) {
 
+        String jwt = token.substring(7); // remove "Bearer "
+        String adminEmail = jwtUtil.extractEmail(jwt);
+        String adminId = adminEmail; // or fetch from DB if email ≠ adminId
 
-    /*@GetMapping("/{userId}")
-    public ResponseEntity<?> getUserDetails(@PathVariable String userId) {
-        return userService.getUserDetails(userId);
-    }*/
+        return userService.addUser(userDTO, adminId);
+    }
 }
